@@ -39,30 +39,38 @@ def extract_segments(text):
     segments.append(left_text)
     return segments
 
-
-def extract_paragraphs(text):
+def extract_paragraphs(raw_text):
     """
     returns:
         paragraphs: content, comment
     """
-    filtered_split_words_text = re.sub(r'-[\r|\n]\b', '', text)
+    splitor = '==[SPLITOR]=='
+    discardor = '==[DISCARDOR]=='
+    filtered = re.sub('\:[\r|\n]', ':\n\n', raw_text)
+    filtered0 = re.sub('[\r|\n]+\(A\) \(C\)[\r|\n]+\(D\)\(B\)', discardor, filtered)
+    filtered1 = re.sub(r',[\r|\n]+', ', ', filtered0)
+    filtered2 = re.sub(r'[\r|\n]{2,}', splitor, filtered1)
+    filtered3 = re.sub(r'-[\r|\n]\b', '', filtered2) # concat ' -'
+    filtered4 = re.sub(r'\/[\r|\n]', '/', filtered3)
+    filtered5 = re.sub(r'[\r|\n]', ' ', filtered4)
+    filtered_text = filtered5
 
-    filtered_split_sentence_text = re.sub(r'\b[\r|\n]\b', ' ', filtered_split_words_text)
-    t = re.sub(r'\/[\r|\n]', '/', filtered_split_sentence_text)
-    filter_text = re.sub(r',[\r|\n]', ', ', t)
+    lines = filtered_text.split(splitor)
+    lines = [l for l in lines if l != '' and (len(l) > 60 or l[-1] != ':') and (discardor not in l)]
 
-    lines = filter_text.splitlines()
-    lines = [l for l in lines if l != '' and (len(l) > 80 or l[-1] != ':')]
     paragraphs = []
+    short_length = 120
     for l in lines:
-        # print("l", paragraphs)
         if len(paragraphs) > 0:
-            # print("hehe", paragraphs[-1][0][-1], re.search('\b', paragraphs[-1][0][-1]))
             if l[0] == "(" and l[-1] == ")":
                 paragraphs[-1][-1] = l[1:-1]
-            # elif re.search('\b', paragraphs[-1][0][-1]) != None:
-            #    paragraphs[-1][0] = paragraphs[-1][0] + " " + l
+            elif len(l) < short_length:
+                # forward detect short paragraphs
+                if (not re.search('\d+', l) or len(l) > 5) and paragraphs[-1][-1] == '':
+                    paragraphs[-1][0] = paragraphs[-1][0] + " " + l
             else:
+                # backward detect short paragraphs
+                # if paragraphs[-1][0] < short_length:
                 paragraphs.append([l, ''])
         else:
             paragraphs.append([l, ''])
@@ -83,4 +91,3 @@ def parse_old_protocol(dir_name, file_name):
         paragraphs_of_segment = extract_paragraphs(s)
         paragraphs = paragraphs + [[idx, segment_idx] + p for p in paragraphs_of_segment]
     return paragraphs
-
