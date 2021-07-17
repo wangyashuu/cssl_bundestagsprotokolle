@@ -31,7 +31,7 @@ def parse_new_protocol(dir_name, file_name):
     tree = ET.ElementTree(file=os.path.join(dir_name, file_name))
     root = tree.getroot()
     session_history = root.find('sitzungsverlauf')
-    idx = file_name.replace(".xml", "")
+    idx = file_name.replace('.xml', '').replace('-data', '')
     paragraphs = []
     for agenda_idx, agenda_item in enumerate(session_history.findall('tagesordnungspunkt')):
         for rede in agenda_item.findall('rede'):
