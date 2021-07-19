@@ -35,11 +35,11 @@ def parse_new_protocol(dir_name, file_name):
     paragraphs = []
     for agenda_idx, agenda_item in enumerate(session_history.findall('tagesordnungspunkt')):
         for rede in agenda_item.findall('rede'):
-            redner = rede.find('.//redner')
+            speaker = rede.find('.//redner').tail
             for i in range(1, len(rede)):
                 comment = rede[i+1].text[1:-1] if i+1 < len(rede) and rede[i+1].tag == 'kommentar' else ''
                 content = rede[i].text
                 if rede[i].tag == 'p':
                     if content != None: # a new speaker
-                        paragraphs.append([idx, agenda_idx, content, comment])
+                        paragraphs.append([idx, agenda_idx, speaker, content, comment])
     return paragraphs

@@ -56,24 +56,27 @@ def extract_paragraphs(raw_text):
     filtered_text = filtered5
 
     lines = filtered_text.split(splitor)
-    lines = [l for l in lines if l != '' and (len(l) > 60 or l[-1] != ':') and (discardor not in l)]
+    lines = [l for l in lines if l != '' and (discardor not in l)]
 
+    short_length = 30
+    speaker = ''
     paragraphs = []
-    short_length = 120
     for l in lines:
-        if len(paragraphs) > 0:
+        if len(l) < 60 and l[-1] == ':': # speaker line
+            speaker = l
+        elif len(paragraphs) > 0:
             if l[0] == "(" and l[-1] == ")":
                 paragraphs[-1][-1] = l[1:-1]
             elif len(l) < short_length:
                 # forward detect short paragraphs
                 if (not re.search('\d+', l) or len(l) > 5) and paragraphs[-1][-1] == '':
-                    paragraphs[-1][0] = paragraphs[-1][0] + " " + l
+                    paragraphs[-1][1] = paragraphs[-1][1] + " " + l
             else:
                 # backward detect short paragraphs
                 # if paragraphs[-1][0] < short_length:
-                paragraphs.append([l, ''])
+                paragraphs.append([speaker, l, ''])
         else:
-            paragraphs.append([l, ''])
+            paragraphs.append([speaker, l, ''])
     return paragraphs
 
 
